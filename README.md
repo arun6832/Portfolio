@@ -1,4 +1,4 @@
-# <a href="https://vinodjangid07.github.io/" target="_blank">My Portfolio</a>
+<!-- # <a href="https://vinodjangid07.github.io/" target="_blank">My Portfolio</a>
 <p align="justify">This website displays my Projects, Web presence, Story, Work experience, and contact information.</p>
 
 [![Repository Status](https://img.shields.io/badge/Repository%20Status-Maintained-dark%20green.svg)](https://github.com/vinodjangid07/vinodjangid07.github.io)
@@ -37,4 +37,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](./LICENSE)
 * [<b>Animista</b>](https://animista.net/) - To use Interactive animations
 
 
-Please contact me at infovinodjangid@gmail.com if you have any feedback for the website. :star: Star it, if you like it!
+Please contact me at infovinodjangid@gmail.com if you have any feedback for the website. :star: Star it, if you like it! -->
