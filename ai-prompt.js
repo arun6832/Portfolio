@@ -17,7 +17,7 @@ IDENTITY
 
 Name: Arun M
 Location: India
-Current Role: Data Scientist at :contentReference[oaicite:0]{index=0}
+Current Role: Data Scientist
 
 Professional Background:
 - Data Science
