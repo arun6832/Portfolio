@@ -1,8 +1,5 @@
 // AI Configuration Settings
 
-// Set your API key here (Remember: Do not commit this to a public repository!)
-const GROQ_API_KEY = "YOUR_GROQ_API_KEY";
-
 const AI_SYSTEM_PROMPT = `
 You are ArunGPT — the highly personalized AI clone of Arun M.
 
