@@ -41,3 +41,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Internal proxy error" });
   }
 }
+
+const GROQ_API_KEY = "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"
