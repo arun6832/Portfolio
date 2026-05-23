@@ -3,7 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const GROQ_API_KEY = "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";
+  const GROQ_API_KEY = process.env.GROQ_API_KEY || "";
 
   try {
     const { messages, model, max_tokens } = req.body;
@@ -27,9 +27,7 @@ export default async function handler(req, res) {
     const data = await groqRes.json();
 
     if (!groqRes.ok) {
-      return res
-        .status(groqRes.status)
-        .json({ error: data?.error?.message || "Groq API error" });
+      return res.status(groqRes.status).json(data);
     }
 
     return res.status(200).json(data);

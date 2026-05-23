@@ -63,25 +63,47 @@
       max-width: 95vw;
     }
 
-    @media (max-width: 480px) {
+    html, body {
+      overflow-x: hidden;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    @media (max-width: 768px) {
       nav {
         top: 0.75rem;
-        padding: 0.35rem;
+        padding: 0.5rem 1rem;
+        border-radius: 100px;
+        width: 92vw;
+        max-width: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
+      nav .nav-logo {
+        display: none; /* Hide logo on mobile to give links full width */
+      }
+      nav .nav-links,
       nav.at-top .nav-links,
       nav:hover .nav-links {
-        max-width: calc(95vw - 60px);
-        gap: 1rem;
-        padding-left: 0.75rem;
-        padding-right: 0.75rem;
+        max-width: 100%;
+        width: 100%;
+        opacity: 1;
+        display: flex;
+        justify-content: space-between;
+        gap: 0;
+        padding: 0;
+        pointer-events: auto;
       }
       .nav-links a {
-        font-size: 0.65rem;
-        letter-spacing: 0.06em;
+        font-size: 0.7rem;
+        letter-spacing: 0.05em;
+        padding: 0.2rem 0.4rem;
       }
-      .nav-avatar-img {
-        width: 32px;
-        height: 32px;
+      .face-stack {
+        width: 90vw !important;
+        max-width: 420px !important;
       }
     }
 
@@ -2356,29 +2378,47 @@
       cursor: pointer;
     }
 
-    /* ── Mobile: Chat widget fills screen ── */
-    @media (max-width: 480px) {
+    /* ── Mobile: Fully responsive floating chat layout ── */
+    @media (max-width: 768px) {
       #ai-chat-widget {
         bottom: 1rem;
         right: 1rem;
       }
       .chat-window {
-        /* Detach from parent positioning — fill screen */
+        position: fixed;
+        bottom: 5.5rem;
+        right: 1rem;
+        left: 1rem;
+        width: auto;
+        max-width: 360px;
+        margin-left: auto;
+        height: 420px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .chat-header {
+        padding: 0.9rem 1rem;
+      }
+      #chat-input {
+        font-size: 16px; /* prevents iOS zoom on focus */
+      }
+    }
+
+    @media (max-width: 480px) {
+      .chat-window {
         position: fixed;
         inset: 0;
         width: 100%;
+        max-width: 100%;
         height: 100%;
         bottom: unset;
         right: unset;
+        left: unset;
         border-radius: 0;
         border: none;
       }
       .chat-header {
-        padding: 1.25rem 1rem;
         padding-top: max(1.25rem, env(safe-area-inset-top));
-      }
-      #chat-input {
-        font-size: 16px; /* prevents iOS zoom on focus */
       }
     }
   </style>
@@ -2389,7 +2429,10 @@
     </div>
     <div class="chat-window">
       <div class="chat-header">
-         <h4>Arun's AI Clone</h4>
+         <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <h4>Arun's AI Clone</h4>
+            <span id="chat-mode-badge" style="font-size: 0.65rem; padding: 0.15rem 0.4rem; border-radius: 4px; background: rgba(249, 115, 22, 0.15); color: var(--accent); border: 1px solid rgba(249, 115, 22, 0.3); font-family: var(--mono); display: none;">DEMO</span>
+         </div>
          <span class="close-chat">×</span>
       </div>
       <div class="chat-body" id="chat-messages">
@@ -2437,13 +2480,77 @@
       toggleBtn.addEventListener('click', () => chatWidget.classList.add('open'));
       closeBtn.addEventListener('click', () => chatWidget.classList.remove('open'));
 
-      async function handleSend() {
-        const text = chatInput.value.trim();
-        if (!text) return;
+      async function callGroqDirectly(messagesList) {
+        const apiKey = localStorage.getItem("user_groq_key") || "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";
         
-        appendMessage(text, false);
-        chatInput.value = '';
-        chatHistory.push({ role: "user", content: text });
+        return fetch("https://api.groq.com/openai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${apiKey}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            model: "llama-3.1-8b-instant",
+            messages: messagesList,
+            max_tokens: 150
+          })
+        });
+      }
+
+      function showApiKeyPrompt() {
+        const promptDiv = document.createElement('div');
+        promptDiv.className = 'message ai-msg';
+        promptDiv.style.alignSelf = 'flex-start';
+        promptDiv.style.width = '90%';
+        promptDiv.innerHTML = `
+          <p style="margin-bottom: 0.6rem; color: var(--fg); font-size: 0.85rem;">⚠️ The Groq API key is invalid or not configured properly. To test Arun GPT directly from your browser, please paste a valid Groq API key below:</p>
+          <div style="display: flex; gap: 0.4rem; width: 100%;">
+            <input type="password" id="groq-key-input" placeholder="gsk_..." style="flex: 1; min-width: 0; padding: 0.4rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-size: 0.8rem; font-family: var(--mono); outline: none;">
+            <button id="groq-key-save" style="background: var(--accent); color: #000; border: none; padding: 0.4rem 0.8rem; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.75rem; white-space: nowrap;">Save & Retry</button>
+          </div>
+        `;
+        chatBody.appendChild(promptDiv);
+        chatBody.scrollTop = chatBody.scrollHeight;
+        
+        const saveBtn = promptDiv.querySelector('#groq-key-save');
+        const keyInput = promptDiv.querySelector('#groq-key-input');
+        
+        saveBtn.addEventListener('click', () => {
+          const keyVal = keyInput.value.trim();
+          if (keyVal) {
+            localStorage.setItem('user_groq_key', keyVal);
+            promptDiv.innerHTML = `<p style="color: var(--accent); font-size: 0.85rem; font-family: var(--mono);">⚡ API key updated! Retrying your query...</p>`;
+            setTimeout(() => {
+              chatBody.removeChild(promptDiv);
+              handleSend(true);
+            }, 800);
+          }
+        });
+      }
+
+      async function handleSend(isRetry = false) {
+        if (window.location.protocol === 'file:') {
+          const fileText = chatInput.value.trim();
+          if (fileText && !isRetry) appendMessage(fileText, false);
+          chatInput.value = '';
+          appendMessage("⚠️ Browser Security Warning: You have opened this page directly via the file:// protocol. Browsers restrict network requests (fetch) from local files. Please run a local web server (e.g., VS Code Live Server, or run 'npx serve' in your terminal) to test the chatbot clone.", true);
+          return;
+        }
+
+        let text = "";
+        
+        if (!isRetry) {
+          text = chatInput.value.trim();
+          if (!text) return;
+          appendMessage(text, false);
+          chatInput.value = '';
+          chatHistory.push({ role: "user", content: text });
+        } else {
+          // If retrying, retrieve the last user message from chatHistory
+          const userMessages = chatHistory.filter(m => m.role === "user");
+          if (userMessages.length === 0) return;
+          text = userMessages[userMessages.length - 1].content;
+        }
         
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'message ai-msg loading-msg';
@@ -2451,6 +2558,36 @@
         chatBody.appendChild(loadingDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
 
+        const badge = document.getElementById('chat-mode-badge');
+
+        // Helper to process a successful response from either API source
+        const handleSuccess = (data, sourceName) => {
+          if (chatBody.contains(loadingDiv)) chatBody.removeChild(loadingDiv);
+          
+          if (data.choices && data.choices.length > 0) {
+            const reply = data.choices[0].message.content;
+            appendMessage(reply, true);
+            chatHistory.push({ role: "assistant", content: reply });
+            
+            if (badge) {
+              badge.style.display = 'inline-block';
+              badge.innerText = sourceName;
+              if (sourceName === 'LOCAL') {
+                badge.style.background = 'rgba(128, 128, 128, 0.15)';
+                badge.style.color = '#888';
+                badge.style.borderColor = 'rgba(128, 128, 128, 0.3)';
+              } else {
+                badge.style.background = 'rgba(249, 115, 22, 0.15)';
+                badge.style.color = 'var(--accent)';
+                badge.style.borderColor = 'rgba(249, 115, 22, 0.3)';
+              }
+            }
+            return true;
+          }
+          return false;
+        };
+
+        // 1. Try backend server proxy first
         try {
           const response = await fetch("/api/chat", {
             method: "POST",
@@ -2464,20 +2601,38 @@
             })
           });
           
-          const data = await response.json();
-          chatBody.removeChild(loadingDiv);
-          
-          if (data.choices && data.choices.length > 0) {
-            const reply = data.choices[0].message.content;
-            appendMessage(reply, true);
-            chatHistory.push({ role: "assistant", content: reply });
-          } else {
-            appendMessage("Sorry, I'm having trouble thinking right now.", true);
+          if (!response.ok) {
+            throw new Error(`Server returned status ${response.status}`);
           }
-        } catch (error) {
-          chatBody.removeChild(loadingDiv);
-          appendMessage("Connection error. Ensure your API key is set properly.", true);
+          
+          const data = await response.json();
+          if (handleSuccess(data, 'LIVE')) return;
+        } catch (serverError) {
+          console.warn("Backend proxy failed, attempting direct Groq API connection...", serverError);
         }
+
+        // 2. Fall back to direct client-side fetch to Groq API
+        try {
+          const response = await callGroqDirectly(chatHistory);
+          const data = await response.json();
+          
+          if (response.ok) {
+            if (handleSuccess(data, 'LOCAL')) return;
+          } else {
+            // Groq responded but with an error (e.g., 401 Invalid API Key)
+            if (chatBody.contains(loadingDiv)) chatBody.removeChild(loadingDiv);
+            if (response.status === 401 || data?.error?.code === "invalid_api_key" || data?.error?.message?.includes("key")) {
+              showApiKeyPrompt();
+              return;
+            }
+          }
+        } catch (directError) {
+          console.error("Direct Groq fetch connection failed:", directError);
+        }
+
+        // 3. Complete failure fallback
+        if (chatBody.contains(loadingDiv)) chatBody.removeChild(loadingDiv);
+        appendMessage("Unable to connect to the AI model. Please ensure your internet connection is active or set a valid API key.", true);
       }
 
       sendBtn.addEventListener('click', handleSend);
